@@ -1,14 +1,23 @@
-const Crud = require('../interface/interfaceCrud');
-const ContextStrategy = require('../Context/contextStrategy');
-const Mongoose = require('mongoose');
 const model = require('../Schema/Schemas')
 const assert = require('assert');
 const connection = require('../Servidor');
+const JWT = require('jsonwebtoken');
+const express = require('express')
+const mongodb = require('mongodb')
 
+
+
+const NovoUsuario = {
+    nome: 'michelangelo',
+    senha: 'tartaruga'
+}
 
 const CadastroUsuario = {
     nome: 'leonardo',
     idade: '25'
+}
+const usuarioAtualizar = {
+    nome: 'rafael', idade: '30'
 }
 const usuarioFantasma = {}
 
@@ -23,15 +32,40 @@ describe('suite de testes', function(){
     })
     it('usuario encontrado com sucesso', async ()=>{
         const [{nome, idade}] = await model.find({nome: CadastroUsuario.nome})
-        const resultado = {nome, idade}
-        assert.deepEqual(resultado, CadastroUsuario)
+        const result = {nome, idade}
+        assert.deepEqual(result, CadastroUsuario)
     })
-    it('usuario atualizado com sucesso', async () =>{
-        const update = await model.updateOne(usuarioFantasma, {nome: 'rafael', idade: '30'})
+    it('atualizando usuario', async () =>{
+        const {nome, idade} = await model.findOneAndUpdate(usuarioFantasma, usuarioAtualizar)
+        const result = {nome, idade}
+        
+        try {
+            assert.deepEqual(usuarioAtualizar, result)
+        } catch (error) {
+            if(result !== usuarioAtualizar){
+                console.log('não existe usuario para atualizar')
+            }      
+        }
+          
     })
-    it('usuario deletado com sucesso', async () => {
-        const del = await model.findOneAndDelete({_id: '61fd76ef2148939d41023ef4'})
+    it('deletando usuario', async ()=>{
+        const result = await model.deleteOne(CadastroUsuario)
+        
+        try {
+            assert.deepEqual(result.deletedCount, 1)
+        } catch (error) {
+            if(result.deletedCount !== 1){
+                console.log('não existe nada no banco de dados para deletar')
+            }
+        }   
     })
+    it('deve obter um token', async ()=>{
+        const token = JWT.sign({id: NovoUsuario.id}, 'abc', {
+            expiresIn: 84000,
+        })
+        
+    })
+        
 })
     
 
